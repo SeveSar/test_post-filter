@@ -5,7 +5,9 @@
     "baseUrl": ".",
     "paths": {
       "@/*": ["./src/*"]
-    }
+    },
+    "lib": ["es2022", "dom"],
+    "target": "ES2015"
   },
 
   "references": [

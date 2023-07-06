@@ -4,9 +4,9 @@
 body {
   font-family: $font-family;
   font-weight: 400;
-  padding: 50px;
-  background-color: #f7f6f4;
-  @include sm() {
-    padding: 20px 16px;
-  }
+}
+
+#app {
+  min-height: calc(100vh - 50px);
+  padding: 0 0 50px;
 }

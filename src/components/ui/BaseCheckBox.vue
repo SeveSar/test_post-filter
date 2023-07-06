@@ -5,8 +5,8 @@
       class="base-checkbox__control"
       :value="value"
       :disabled="disabled"
-      @change="onChange"
       :checked="isChecked"
+      v-model="model"
     />
 
     {{ label }}
@@ -19,12 +19,11 @@ import { defineComponent, type PropType, computed } from 'vue'
 export default defineComponent({
   props: {
     modelValue: {
-      type: null as unknown as PropType<string[] | boolean>,
-      default: null,
-      validator: (v: any) => typeof v === 'boolean' || Array.isArray(v)
+      type: [Boolean, Array],
+      required: true
     },
     value: {
-      type: null as unknown as PropType<string | boolean>,
+      type: [String, Number, Boolean],
       required: true
     },
     label: {
@@ -41,23 +40,16 @@ export default defineComponent({
     }
   },
   setup(props, { emit }) {
-    const onChange = (event: Event) => {
-      const elem = event.target as HTMLInputElement
-      let isChecked = elem.checked
-      if (props.modelValue instanceof Array && typeof props.value !== 'boolean') {
-        let newValue = [...props.modelValue]
-        if (isChecked) {
-          newValue.push(props.value)
-        } else {
-          newValue.splice(newValue.indexOf(props.value), 1)
-        }
-        emit('update:modelValue', newValue)
-      } else {
-        emit('update:modelValue', isChecked ? true : false)
+    const model = computed({
+      get() {
+        return props.modelValue
+      },
+      set(value) {
+        emit('update:modelValue', value)
       }
-    }
+    })
     const isChecked = computed(() => {
-      if (props.modelValue instanceof Array && typeof props.value !== 'boolean') {
+      if (props.modelValue instanceof Array) {
         return props.modelValue.includes(props.value)
       }
       return props.modelValue === true
@@ -66,13 +58,14 @@ export default defineComponent({
     const classes = computed(() => {
       return {
         'base-checkbox--active': isChecked.value,
-        [`base-checkbox--${props.size}`]: true
+        [`base-checkbox--${props.size}`]: true,
+        [`base-checkbox--text`]: props.label
       }
     })
     return {
-      onChange,
       isChecked,
-      classes
+      classes,
+      model
     }
   }
 })
@@ -129,6 +122,7 @@ export default defineComponent({
       }
     }
   }
+
   &--small {
     &::before {
       width: 16px;
@@ -139,6 +133,12 @@ export default defineComponent({
       &::before {
         background-image: url('/images/tickSmall.svg');
       }
+    }
+  }
+
+  &--text {
+    @include xl() {
+      padding-left: 24px;
     }
   }
 }
