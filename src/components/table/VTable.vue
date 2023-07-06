@@ -7,30 +7,34 @@
       :filters="filters"
       @update:modelValue="(data) => emit('update:filterValue', data)"
     />
-    <VTableHeader
-      :columns="columns"
-      :sortColumn="sortColumn"
-      :sortDirection="sortDirection"
-      @onClickKey="emit('clickSortKey', $event)"
-    />
-    <div class="v-table__body">
-      <template v-if="items.length">
-        <div
-          class="v-table__body-row"
-          v-for="item in items"
-          :key="item.id"
-          @click.prevent="emit('clickRow', item.id)"
-        >
-          <div class="v-table__body-item" v-for="column in columns" :key="column.key">
-            {{ item[column.key] }}
-          </div>
+    <div class="v-table__responsive">
+      <div class="v-table__inner">
+        <VTableHeader
+          :columns="columns"
+          :sortColumn="sortColumn"
+          :sortDirection="sortDirection"
+          @onClickKey="emit('clickSortKey', $event)"
+        />
+        <div class="v-table__body">
+          <template v-if="items.length">
+            <div
+              class="v-table__body-row"
+              v-for="item in items"
+              :key="item.id"
+              @click.prevent="emit('clickRow', item.id)"
+            >
+              <div class="v-table__body-item" v-for="column in columns" :key="column.key">
+                {{ item[column.key] }}
+              </div>
+            </div>
+          </template>
+          <template v-else>
+            <slot name="empty">
+              <div class="v-table__empty">No items found ...</div>
+            </slot>
+          </template>
         </div>
-      </template>
-      <template v-else>
-        <slot name="empty">
-          <div class="v-table__empty">No items found ...</div>
-        </slot>
-      </template>
+      </div>
     </div>
     <UiPagination
       class="v-table__pagination"
@@ -79,6 +83,16 @@ const emit = defineEmits(['update:filterValue', 'update:currentPage', 'clickRow'
   display: flex;
   flex-direction: column;
   flex-grow: 1;
+
+  &__responsive {
+    overflow-x: auto;
+  }
+  &__inner {
+    display: flex;
+    flex-direction: column;
+    flex-grow: 1;
+    min-width: 800px;
+  }
   &__body {
     &-row {
       display: flex;
@@ -90,7 +104,6 @@ const emit = defineEmits(['update:filterValue', 'update:currentPage', 'clickRow'
     &-item {
       padding: 18px 0;
       text-align: center;
-
       flex-basis: 20%;
       flex-grow: 1;
     }

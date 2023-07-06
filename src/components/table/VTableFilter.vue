@@ -34,6 +34,7 @@ const emit = defineEmits(['update:modelValue'])
   justify-content: space-between;
   gap: 25px;
   padding: 0 20px;
+  overflow-x: auto;
   &__control {
     flex-grow: 1;
     border: 1px solid $gray-dark-color;
