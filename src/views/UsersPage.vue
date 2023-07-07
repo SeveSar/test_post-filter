@@ -7,14 +7,12 @@
       :currentPage="currentPage"
       :columns="columns"
       :filtersView="filtersView"
-      :sortColumn="sortColumn"
-      :sortDirection="sortDirection"
       :items="usersData"
       :filters="filters"
       @update:currentPage="setPage"
       @update:filterValue="setFilter"
       @clickRow="navigate"
-      @clickSortKey="setSort"
+      @update:sortValues="setSort"
     />
   </div>
 </template>
@@ -50,12 +48,30 @@ const sortColumn = ref<keyof IUserFilter | ''>('')
 const sortDirection = ref<'asc' | 'desc'>('asc')
 
 const columns = ref([
-  { key: 'id', title: 'ID' },
-  { key: 'name', title: 'Name' },
-  { key: 'username', title: 'Username' },
-  { key: 'email', title: 'Email' },
-  { key: 'phone', title: 'Phone' },
-  { key: 'website', title: 'Website' }
+  {
+    key: 'id',
+    title: 'ID'
+  },
+  {
+    key: 'name',
+    title: 'Name'
+  },
+  {
+    key: 'username',
+    title: 'Username'
+  },
+  {
+    key: 'email',
+    title: 'Email'
+  },
+  {
+    key: 'phone',
+    title: 'Phone'
+  },
+  {
+    key: 'website',
+    title: 'Website'
+  }
 ])
 const filtersView = computed(() => {
   return columns.value.map((item) => {
@@ -73,7 +89,10 @@ const getUsers = async () => {
     pagination: IPagination
   } = {
     filters: filters.value,
-    sorts: { sortColumn: sortColumn.value, sortDirection: sortDirection.value },
+    sorts: {
+      sortColumn: sortColumn.value,
+      sortDirection: sortDirection.value
+    },
     pagination: {
       limit: paginationView.value.perPage,
       currentPage: currentPage.value
@@ -91,34 +110,35 @@ const setPage = (page: number) => {
   currentPage.value = page
   getUsers()
 }
-const setFilter = <T extends keyof IUserFilter>({
-  value,
-  key
-}: {
-  value: IUserFilter[T]
-  key: T
-}) => {
+const setFilter = <T extends keyof IUserFilter>({ value, key }: { value: IUserFilter[T]; key: T }) => {
   currentPage.value = 1
   filters.value[key] = value
 }
 
-const setSort = (columnKey: keyof IUserFilter) => {
-  if (sortColumn.value === columnKey) {
-    sortDirection.value = sortDirection.value === 'asc' ? 'desc' : 'asc'
-  } else {
-    sortColumn.value = columnKey
-    sortDirection.value = 'asc'
-  }
+const setSort = ({ direction, columnKey }: { columnKey: keyof IUserFilter; direction: 'asc' | 'desc' }) => {
+  console.log(direction, columnKey)
+
+  sortDirection.value = direction
+  sortColumn.value = columnKey
 }
 
 const navigate = (id: number) => {
-  router.push({ name: 'User', params: { id } })
+  router.push({
+    name: 'User',
+    params: {
+      id
+    }
+  })
 }
 getUsers()
 
 const debouncedGetUsers = debounce(getUsers, 400)
-watch(filters, debouncedGetUsers, { deep: true })
-watch(() => [sortColumn, sortDirection], debouncedGetUsers, { deep: true })
+watch(filters, debouncedGetUsers, {
+  deep: true
+})
+watch(() => [sortColumn, sortDirection], debouncedGetUsers, {
+  deep: true
+})
 </script>
 
 <style scoped lang="scss">

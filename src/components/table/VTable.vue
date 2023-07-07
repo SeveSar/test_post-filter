@@ -1,28 +1,12 @@
 <template>
   <div class="v-table">
-    <VTableFilter
-      class="v-table__filter"
-      v-if="filtersView"
-      :filtersView="filtersView"
-      :filters="filters"
-      @update:modelValue="(data) => emit('update:filterValue', data)"
-    />
+    <VTableFilter class="v-table__filter" v-if="filtersView" :filtersView="filtersView" :filters="filters" @update:modelValue="(data) => emit('update:filterValue', data)" />
     <div class="v-table__responsive">
       <div class="v-table__inner">
-        <VTableHeader
-          :columns="columns"
-          :sortColumn="sortColumn"
-          :sortDirection="sortDirection"
-          @onClickKey="emit('clickSortKey', $event)"
-        />
+        <VTableHeader :columns="columns" :sortColumn="sortColumn" :sortDirection="sortDirection" @onClickKey="setSort" />
         <div class="v-table__body">
           <template v-if="items.length">
-            <div
-              class="v-table__body-row"
-              v-for="item in items"
-              :key="item.id"
-              @click.prevent="emit('clickRow', item.id)"
-            >
+            <div class="v-table__body-row" v-for="item in items" :key="item.id" @click.prevent="emit('clickRow', item.id)">
               <div class="v-table__body-item" v-for="column in columns" :key="column.key">
                 {{ item[column.key] }}
               </div>
@@ -50,6 +34,7 @@
 import VTableHeader from './VTableHeader.vue'
 import VTableFilter from './VTableFilter.vue'
 import UiPagination from '../ui/UiPagination.vue'
+import { ref } from 'vue'
 
 export interface IItem {
   [key: string]: any
@@ -69,13 +54,24 @@ interface Props {
     totalCount: number
   }
   currentPage: number
-  sortColumn: string
-  sortDirection: 'asc' | 'desc'
   filters: any
 }
 
 defineProps<Props>()
-const emit = defineEmits(['update:filterValue', 'update:currentPage', 'clickRow', 'clickSortKey'])
+const emit = defineEmits(['update:filterValue', 'update:currentPage', 'update:sortValues', 'clickRow'])
+
+const sortColumn = ref<keyof IItem | ''>('')
+const sortDirection = ref<'asc' | 'desc'>('asc')
+
+const setSort = (columnKey: keyof IItem) => {
+  if (sortColumn.value === columnKey) {
+    sortDirection.value = sortDirection.value === 'asc' ? 'desc' : 'asc'
+  } else {
+    sortColumn.value = columnKey
+    sortDirection.value = 'asc'
+  }
+  emit('update:sortValues', { columnKey: sortColumn.value, direction: sortDirection.value })
+}
 </script>
 
 <style scoped lang="scss">

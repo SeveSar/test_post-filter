@@ -9,12 +9,10 @@
       :filters="filters"
       :columns="columns"
       :items="postsData"
-      :sortColumn="sortColumn"
-      :sortDirection="sortDirection"
       @update:currentPage="setPage"
       @update:filterValue="setFilter"
+      @update:sortValues="setSort"
       @clickRow="navigate"
-      @clickSortKey="setSort"
     />
   </div>
 </template>
@@ -91,22 +89,12 @@ const setPage = (page: number) => {
   getPosts()
 }
 
-const setSort = (columnKey: keyof IPostFilter) => {
-  if (sortColumn.value === columnKey) {
-    sortDirection.value = sortDirection.value === 'asc' ? 'desc' : 'asc'
-  } else {
-    sortColumn.value = columnKey
-    sortDirection.value = 'asc'
-  }
+const setSort = ({ direction, columnKey }: { columnKey: keyof IPostFilter; direction: 'asc' | 'desc' }) => {
+  sortDirection.value = direction
+  sortColumn.value = columnKey
 }
 
-const setFilter = <T extends keyof IPostFilter>({
-  value,
-  key
-}: {
-  value: IPostFilter[T]
-  key: T
-}) => {
+const setFilter = <T extends keyof IPostFilter>({ value, key }: { value: IPostFilter[T]; key: T }) => {
   currentPage.value = 1
   filters.value[key] = value
 }
