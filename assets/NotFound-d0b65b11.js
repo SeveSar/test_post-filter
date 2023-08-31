@@ -1,1 +1,0 @@
-import{e as o,o as e,c as s,a as _,t as n,_ as a}from"./index-c1a2f86c.js";const c={class:"not-found"},d={class:"not-found__title"},p=o({__name:"NotFound",props:{title:{}},setup(r){return(t,i)=>(e(),s("div",c,[_("h1",d,n(t.title),1)]))}});const u=a(p,[["__scopeId","data-v-b8a043b1"]]);export{u as N};

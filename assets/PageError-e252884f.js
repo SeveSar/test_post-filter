@@ -1,0 +1,1 @@
+import{_ as c,o,c as s,p as _,q as a,g as t}from"./index-1c1a9724.js";const r={},d=e=>(_("data-v-ccab6397"),e=e(),a(),e),n={class:"page-error"},p=d(()=>t("h1",{class:"page-error__title"},"Page not found(404)",-1)),i=[p];function l(e,f){return o(),s("div",n,i)}const h=c(r,[["render",l],["__scopeId","data-v-ccab6397"]]);export{h as default};
