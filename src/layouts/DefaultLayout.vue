@@ -1,6 +1,5 @@
 <template>
   <div class="default-layout">
-    <TheHeader />
     <router-view />
   </div>
 </template>

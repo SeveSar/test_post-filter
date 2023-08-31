@@ -1,76 +1,58 @@
 <template>
   <div class="posts-page">
-    <VTable
-      class="posts-page__table"
-      v-if="postsData"
-      :paginationView="paginationView"
+    <PostFilter class="posts-page__filter" v-model="filter" />
+    <div class="posts-page__list" v-if="filteredUsersId.length">
+      <PostItem class="post-page__item" v-for="post in currentPosts" :key="post.id" :post="post" />
+    </div>
+    <small class="posts-page__not-found" v-else>NOT FOUND</small>
+    <UiPagination
+      class="posts-page__pagination"
+      v-if="filteredUsersId.length"
       :currentPage="currentPage"
-      :filtersView="filtersView"
-      :filters="filters"
-      :columns="columns"
-      :items="postsData"
-      @update:currentPage="setPage"
-      @update:filterValue="setFilter"
-      @update:sortValues="setSort"
-      @clickRow="navigate"
+      :perPage="paginationPostView.perPage"
+      :totalCount="paginationPostView.totalCount"
+      @changePage="(page: number) => setPage(page)"
     />
   </div>
 </template>
 
 <script setup lang="ts">
-import VTable from '@/components/table/VTable.vue'
+import UiPagination from '@/components/ui/UiPagination.vue'
+import PostFilter from '@/components/posts/PostFilter.vue'
+import PostItem from '@/components/posts/PostItem.vue'
 import { api } from '@/api'
 import { computed, ref, watch } from 'vue'
-import type { IPost, IPostFilter, TPostSort } from '@/types/post'
-import { useRouter } from 'vue-router'
-import { debounce } from 'lodash'
+import type { IPost } from '@/types/post'
+import { useRoute, useRouter } from 'vue-router'
+import debounce from 'lodash/debounce'
 import type { IPagination } from '@/types/common'
+import type { IUser } from '@/types/user'
 
 const router = useRouter()
+const route = useRoute()
+const postsData = ref<IPost[]>([])
+const usersData = ref<IUser[]>([])
+const filter = ref('')
+const isLoadingPost = ref(false)
 
-const postsData = ref<IPost[] | null>(null)
-
-const filters = ref<IPostFilter>({
-  title: '',
-  body: '',
-  userId: '',
-  id: ''
-})
-
-const paginationView = ref({
+const paginationPostView = ref({
   perPage: 10,
   totalCount: 100
 })
-const currentPage = ref(1)
-const sortColumn = ref<keyof IPostFilter | ''>('')
-const sortDirection = ref<'asc' | 'desc'>('asc')
+const currentPage = ref(route.query.page ? +route.query.page : 1)
 
-const columns = ref([
-  { key: 'id', title: 'ID' },
-  { key: 'title', title: 'Title' },
-  { key: 'body', title: 'Body' },
-  { key: 'userId', title: 'User ID' }
-])
+const filteredUsersId = ref<number[]>([])
 
-const filtersView = computed(() => {
-  return columns.value.map((item) => {
-    return {
-      key: item.key,
-      placeholder: item.title
-    }
-  })
-})
 const getPosts = async () => {
+  isLoadingPost.value = true
   try {
     const queries: {
-      filters: IPostFilter
-      sorts: TPostSort
+      filters: { userId?: number[] }
       pagination: IPagination
     } = {
-      filters: filters.value,
-      sorts: { sortColumn: sortColumn.value, sortDirection: sortDirection.value },
+      filters: { userId: filteredUsersId.value },
       pagination: {
-        limit: paginationView.value.perPage,
+        limit: paginationPostView.value.perPage,
         currentPage: currentPage.value
       }
     }
@@ -78,41 +60,92 @@ const getPosts = async () => {
     const { total, data } = await api.posts.getPosts(queries)
 
     postsData.value = data
-    paginationView.value.totalCount = +total
+    paginationPostView.value.totalCount = +total
   } catch (e) {
     console.log(e)
+  } finally {
+    isLoadingPost.value = false
   }
 }
 
+const getUsers = async () => {
+  try {
+    const { data } = await api.users.getUsers()
+    usersData.value = data
+    filteredUsersId.value = usersData.value.map((user) => user.id)
+  } catch (e) {
+    console.error(e)
+  }
+}
+
+const usersMap = computed(() => {
+  if (!usersData.value) return []
+  return usersData.value?.reduce((acc: Record<number, IUser>, user) => {
+    acc[user.id] = user
+    return acc
+  }, {})
+})
+
+const currentPosts = computed(() => {
+  return postsData.value?.map((post) => {
+    const user = usersMap.value[post.userId]
+    return {
+      ...post,
+      author: user?.name
+    }
+  })
+})
+
 const setPage = (page: number) => {
   currentPage.value = page
+  router.push({ query: { page: currentPage.value } })
   getPosts()
+  window.scrollTo(0, 0)
 }
 
-const setSort = ({ direction, columnKey }: { columnKey: keyof IPostFilter; direction: 'asc' | 'desc' }) => {
-  sortDirection.value = direction
-  sortColumn.value = columnKey
-}
-
-const setFilter = <T extends keyof IPostFilter>({ value, key }: { value: IPostFilter[T]; key: T }) => {
-  currentPage.value = 1
-  filters.value[key] = value
-}
-const navigate = (id: number) => {
-  router.push({ name: 'Post', params: { id } })
-}
-getPosts()
+Promise.all([getUsers(), getPosts()])
 
 const debouncedGetPosts = debounce(getPosts, 400)
-watch(filters, debouncedGetPosts, { deep: true })
-watch(() => [sortColumn, sortDirection], debouncedGetPosts, { deep: true })
+watch(filter, () => {
+  filteredUsersId.value = usersData.value.filter((user) => user.name.toLowerCase().includes(filter.value.toLowerCase())).map((user) => user.id)
+  router.push({ query: { page: 1 } })
+  currentPage.value = 1
+  debouncedGetPosts()
+})
 </script>
 
 <style scoped lang="scss">
 .posts-page {
-  padding-top: 50px;
   flex-grow: 1;
   display: flex;
   flex-direction: column;
+  max-width: 1500px;
+  width: 100%;
+  padding: 50px 20px 0;
+  margin: 0 auto;
+
+  &__filter {
+    margin-bottom: 35px;
+  }
+
+  &__not-found {
+    text-align: center;
+    font-size: 25px;
+  }
+
+  &__list {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+    gap: 25px;
+
+    @media screen and (max-width: 1200px) {
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+    }
+  }
+
+  &__pagination {
+    margin-top: auto;
+    padding-top: 50px;
+  }
 }
 </style>

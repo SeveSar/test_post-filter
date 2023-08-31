@@ -8,33 +8,23 @@ export class PostsService {
   constructor(httpClient: AxiosInstance) {
     this.$http = httpClient
   }
-  async getPosts({
-    filters,
-    sorts,
-    pagination
-  }: {
-    filters: IPostFilter
-    sorts: TPostSort
-    pagination: IPagination
-  }): Promise<{ data: IPost[]; total: string }> {
-    const { sortColumn, sortDirection } = sorts
+  async getPosts({ filters, pagination }: { filters: { userId?: number[] }; pagination: IPagination }): Promise<{ data: IPost[]; total: string }> {
     const { currentPage, limit } = pagination
+    const params: { _page: number; _limit: number; userId?: number[] } = {
+      _page: currentPage,
+      _limit: limit
+    }
+    const url = `/posts`
 
-    let url = `/posts?_page=${currentPage}&_limit=${limit}`
-
-    const keysFilters = Object.keys(filters) as (keyof IPostFilter)[]
+    const keysFilters = Object.keys(filters) as (keyof { userId?: string })[]
 
     keysFilters.forEach((key) => {
-      if (filters[key]) {
-        url += `&${key}_like=${filters[key] || ''}`
-      }
+      params[key] = filters[key] ?? []
     })
 
-    if (sortColumn) {
-      url += `&_sort=${sortColumn}&_order=${sortDirection}`
-    }
-
-    const response = await this.$http.get<IPost[]>(url)
+    const response = await this.$http.get<IPost[]>(url, {
+      params: params
+    })
     return {
       total: response.headers['x-total-count'],
       data: response.data
