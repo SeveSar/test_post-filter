@@ -6,7 +6,7 @@ import vue from '@vitejs/plugin-vue'
 // https://vitejs.dev/config/
 export default defineConfig({
   plugins: [vue()],
-  base: '/test_table/',
+  base: '/test_post-filter/',
   css: {
     preprocessorOptions: {
       scss: {

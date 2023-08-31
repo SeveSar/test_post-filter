@@ -1,9 +1,11 @@
 <template>
   <div class="posts-page">
     <PostFilter class="posts-page__filter" v-model="filter" />
-    <div class="posts-page__list" v-if="filteredUsersId.length">
+    <UiSpinner v-if="isLoadingPost" />
+    <div class="posts-page__list" v-else-if="!isLoadingPost && filteredUsersId.length">
       <PostItem class="post-page__item" v-for="post in currentPosts" :key="post.id" :post="post" />
     </div>
+
     <small class="posts-page__not-found" v-else>NOT FOUND</small>
     <UiPagination
       class="posts-page__pagination"
@@ -20,6 +22,7 @@
 import UiPagination from '@/components/ui/UiPagination.vue'
 import PostFilter from '@/components/posts/PostFilter.vue'
 import PostItem from '@/components/posts/PostItem.vue'
+import UiSpinner from '@/components/ui/UiSpinner.vue'
 import { api } from '@/api'
 import { computed, ref, watch } from 'vue'
 import type { IPost } from '@/types/post'
